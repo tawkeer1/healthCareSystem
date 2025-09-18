@@ -1,18 +1,31 @@
 package com.smartHealthCareAppointmentSystem.HealthCareSystem.service;
 
+import com.smartHealthCareAppointmentSystem.HealthCareSystem.customexceptions.AppointmentNotFoundException;
 import com.smartHealthCareAppointmentSystem.HealthCareSystem.customexceptions.DoctorNotFoundException;
-import com.smartHealthCareAppointmentSystem.HealthCareSystem.models.Doctor;
-import com.smartHealthCareAppointmentSystem.HealthCareSystem.models.User;
+import com.smartHealthCareAppointmentSystem.HealthCareSystem.models.*;
+import com.smartHealthCareAppointmentSystem.HealthCareSystem.repositories.AppointmentRepo;
 import com.smartHealthCareAppointmentSystem.HealthCareSystem.repositories.DoctorRepo;
+import com.smartHealthCareAppointmentSystem.HealthCareSystem.repositories.PatientRepo;
+import com.smartHealthCareAppointmentSystem.HealthCareSystem.repositories.PrescriptionRepo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+import java.util.Optional;
+
 @Service
 public class DoctorService {
+    private final AppointmentRepo appointmentRepo;
+    private final PrescriptionService prescriptionService;
     private final DoctorRepo doctorRepo;
+    private final PatientRepo patientRepo;
     @Autowired
-    public DoctorService(DoctorRepo doctorRepo){
+    public DoctorService(PatientRepo patientRepo,AppointmentRepo appointmentRepo, PrescriptionService prescriptionService
+    ,DoctorRepo doctorRepo){
+        this.appointmentRepo = appointmentRepo;
+        this.prescriptionService = prescriptionService;
         this.doctorRepo = doctorRepo;
+        this.patientRepo = patientRepo;
     }
 
     public Doctor createDoctor(Doctor doctor){
@@ -61,5 +74,24 @@ public class DoctorService {
         Doctor doctor = doctorRepo.findDoctorBySpeciality(speciality);
         if(doctor == null) throw new DoctorNotFoundException("Doctor you are searching for doesn't exist");
         return doctor;
+    }
+    public List<Doctor> searchDoctorsBySpeciality(String speciality){
+        return doctorRepo.findDoctorsBySpeciality(speciality);
+    }
+    public String markAppointmentAsCompleted(Long doctorId, Long appointmentId) throws DoctorNotFoundException, AppointmentNotFoundException{
+        Doctor doctor = doctorRepo.findDoctorById(doctorId);
+        if(doctor == null) throw new DoctorNotFoundException("Doctor you want to mark appointment doesn't exist");
+        Optional<Appointment> appointment = appointmentRepo.findById(appointmentId);
+        if(!appointment.isPresent()) throw new AppointmentNotFoundException("Appointment to be marked doesn't exist");
+        if(appointment.get().getDoctor().getId() != doctorId){
+            throw new RuntimeException("Please enter your own valid appointment id to mark");
+        }
+        appointment.get().setStatus(Status.COMPLETED);
+        appointmentRepo.save(appointment.get());
+        return "Appointment was marked as completed successfully by doctor " + doctorId;
+    }
+
+    public Prescription addPresciption(Long doctorId, Long appointmentId, Medication medication) throws DoctorNotFoundException, AppointmentNotFoundException{
+        return prescriptionService.addPrescription(doctorId,appointmentId,medication);
     }
 }

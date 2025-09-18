@@ -2,28 +2,37 @@ package com.smartHealthCareAppointmentSystem.HealthCareSystem.service;
 
 import com.smartHealthCareAppointmentSystem.HealthCareSystem.customexceptions.DoctorNotFoundException;
 import com.smartHealthCareAppointmentSystem.HealthCareSystem.customexceptions.PatientNotFoundException;
-import com.smartHealthCareAppointmentSystem.HealthCareSystem.models.Doctor;
-import com.smartHealthCareAppointmentSystem.HealthCareSystem.models.Patient;
-import com.smartHealthCareAppointmentSystem.HealthCareSystem.models.User;
+import com.smartHealthCareAppointmentSystem.HealthCareSystem.models.*;
 import com.smartHealthCareAppointmentSystem.HealthCareSystem.repositories.PatientRepo;
+import com.smartHealthCareAppointmentSystem.HealthCareSystem.repositories.PrescriptionRepo;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
 
 @Service
 public class PatientService {
     private final PatientRepo patientRepo;
+    private final PrescriptionService prescriptionService;
     @Autowired
-    public PatientService(PatientRepo patientRepo){
+    public PatientService(PatientRepo patientRepo, PrescriptionService prescriptionService){
         this.patientRepo = patientRepo;
+        this.prescriptionService = prescriptionService;
     }
-    public Patient createPatient(Patient patient){
+    public ResponseEntity<Response> createPatient(Patient patient){
         if(patient == null ) throw new NullPointerException("Patient cannot be null");
-        return patientRepo.save(patient);
+        Response response = new Response("200","createdUserSuccessfully");
+        return ResponseEntity.ok(response);
+    }
+
+    public Patient findPatientById(Long id){
+        return patientRepo.findPatientById(id);
     }
 
     public String deletePatient(Long id) throws PatientNotFoundException {
         Patient patient = patientRepo.findPatientById(id);
-        if(patient ==  null || patient.getId() == null) throw new PatientNotFoundException("Doctor you want to delete doesn't exist");
+        if(patient ==  null || patient.getId() == null) throw new PatientNotFoundException("Patient you want to delete doesn't exist");
         patientRepo.deleteById(id);
         return "Deleted Patient successfully";
     }
@@ -78,5 +87,11 @@ public class PatientService {
             throw new RuntimeException("The updated family History does not exist");
         }
         return patientRepo.save(patient);
+    }
+
+    public List<Prescription> getPrescriptionHistory(Long id) throws PatientNotFoundException{
+        Patient patient = patientRepo.findPatientById(id);
+        if(patient == null) throw new PatientNotFoundException("Patient not found");
+        return prescriptionService.getPrescriptionHistory(id);
     }
 }

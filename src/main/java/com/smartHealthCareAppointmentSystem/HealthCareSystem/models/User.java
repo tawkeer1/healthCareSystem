@@ -1,5 +1,6 @@
 package com.smartHealthCareAppointmentSystem.HealthCareSystem.models;
 
+import com.smartHealthCareAppointmentSystem.HealthCareSystem.annotations.PasswordValidator;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotNull;
@@ -14,7 +15,8 @@ public class User {
     private String name;
     @Email(message = "Please enter a valid email address")
     private String email;
-    @Size(min = 8, message = "Please length cannot be less than 8 characters")
+//    @Size(min = 8, message = "Please length cannot be less than 8 characters")
+    @PasswordValidator
     private String password;
     @NotNull(message = "Role cannot be null")
     @Enumerated(EnumType.STRING)

@@ -11,8 +11,12 @@ public class Appointment {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private Long patientId;
-    private Long doctorId;
+    @ManyToOne
+    @JoinColumn(name = "patient_id", referencedColumnName = "id", nullable = false)
+    private Patient patient;
+    @ManyToOne
+    @JoinColumn(name = "doctor_id", referencedColumnName = "id", nullable = false)
+    private Doctor doctor;
     private LocalDateTime time;
     @NotNull
     @Enumerated(EnumType.STRING)
@@ -26,20 +30,20 @@ public class Appointment {
         this.id = id;
     }
 
-    public Long getPatientId() {
-        return patientId;
+    public Patient getPatient() {
+        return patient;
     }
 
-    public void setPatientId(Long patientId) {
-        this.patientId = patientId;
+    public void setPatient(Patient patient) {
+        this.patient = patient;
     }
 
-    public Long getDoctorId() {
-        return doctorId;
+    public Doctor getDoctor() {
+        return doctor;
     }
 
-    public void setDoctorId(Long doctorId) {
-        this.doctorId = doctorId;
+    public void setDoctor(Doctor doctor) {
+        this.doctor = doctor;
     }
 
     public LocalDateTime getTime() {

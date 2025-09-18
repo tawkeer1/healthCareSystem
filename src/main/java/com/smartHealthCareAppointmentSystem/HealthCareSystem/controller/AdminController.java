@@ -4,11 +4,13 @@ import com.smartHealthCareAppointmentSystem.HealthCareSystem.customexceptions.Do
 import com.smartHealthCareAppointmentSystem.HealthCareSystem.customexceptions.PatientNotFoundException;
 import com.smartHealthCareAppointmentSystem.HealthCareSystem.models.Doctor;
 import com.smartHealthCareAppointmentSystem.HealthCareSystem.models.Patient;
+import com.smartHealthCareAppointmentSystem.HealthCareSystem.models.Response;
 import com.smartHealthCareAppointmentSystem.HealthCareSystem.models.User;
 import com.smartHealthCareAppointmentSystem.HealthCareSystem.service.DoctorService;
 import com.smartHealthCareAppointmentSystem.HealthCareSystem.service.PatientService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -35,7 +37,7 @@ public class AdminController {
         return doctorService.deleteDoctor(id);
     }
     @PostMapping("/createPatient")
-    public Patient createPatient(@Valid @RequestBody Patient patient) throws PatientNotFoundException{
+    public ResponseEntity<Response> createPatient(@Valid @RequestBody Patient patient) throws PatientNotFoundException{
          return patientService.createPatient(patient);
     }
     @PatchMapping("/updatePatient/{id}")
