@@ -23,6 +23,7 @@ public class AppointmentService {
         this.doctorService = doctorService;
         this.patientService = patientService;
     }
+    
     public Appointment bookAppointment(Doctor doctor, Long id) throws PatientNotFoundException,DoctorNotFoundException, DoctorBusyException {
         // what if multiple doctors with the speciality
         Patient patient = patientService.findPatientById(id);

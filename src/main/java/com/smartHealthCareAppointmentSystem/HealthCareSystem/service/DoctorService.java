@@ -2,14 +2,19 @@ package com.smartHealthCareAppointmentSystem.HealthCareSystem.service;
 
 import com.smartHealthCareAppointmentSystem.HealthCareSystem.customexceptions.AppointmentNotFoundException;
 import com.smartHealthCareAppointmentSystem.HealthCareSystem.customexceptions.DoctorNotFoundException;
+import com.smartHealthCareAppointmentSystem.HealthCareSystem.customexceptions.UserNotFoundException;
 import com.smartHealthCareAppointmentSystem.HealthCareSystem.models.*;
-import com.smartHealthCareAppointmentSystem.HealthCareSystem.repositories.AppointmentRepo;
-import com.smartHealthCareAppointmentSystem.HealthCareSystem.repositories.DoctorRepo;
-import com.smartHealthCareAppointmentSystem.HealthCareSystem.repositories.PatientRepo;
-import com.smartHealthCareAppointmentSystem.HealthCareSystem.repositories.PrescriptionRepo;
+import com.smartHealthCareAppointmentSystem.HealthCareSystem.repositories.*;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -19,19 +24,41 @@ public class DoctorService {
     private final PrescriptionService prescriptionService;
     private final DoctorRepo doctorRepo;
     private final PatientRepo patientRepo;
+    private final UserRepo userRepo;
+    private final PasswordEncoder passwordEncoder;
     @Autowired
     public DoctorService(PatientRepo patientRepo,AppointmentRepo appointmentRepo, PrescriptionService prescriptionService
-    ,DoctorRepo doctorRepo){
+    ,DoctorRepo doctorRepo, UserRepo userRepo, PasswordEncoder passwordEncoder){
         this.appointmentRepo = appointmentRepo;
         this.prescriptionService = prescriptionService;
         this.doctorRepo = doctorRepo;
         this.patientRepo = patientRepo;
+        this.userRepo = userRepo;
+        this.passwordEncoder = passwordEncoder;
     }
 
-    public Doctor createDoctor(Doctor doctor){
+    public Doctor createDoctor(Doctor doctor) throws DoctorNotFoundException{
+        if(doctor == null) throw new DoctorNotFoundException("Doctor details cannot be null");
+        doctor.getUser().setPassword(passwordEncoder.encode(doctor.getUser().getPassword()));
+        doctor.getUser().setRole(Role.DOCTOR);
         return doctorRepo.save(doctor);
     }
 
+    public Doctor createDoctorIfUserExists(DoctorRequest doctor, Long userId) throws UserNotFoundException, DoctorNotFoundException{
+        Optional<User> user = userRepo.findById(userId);
+        if(!user.isPresent()) throw new UserNotFoundException("User not found");
+        if(user.get().getId() == null) throw new UserNotFoundException("User does not exist");
+        //if this user is already linked to someone
+        Patient patient = patientRepo.findPatientByUserId(userId);
+        Doctor existingDoctor = doctorRepo.findDoctorByUserId(userId);
+        if(patient != null || existingDoctor != null) throw new RuntimeException("User is already linked to someone");
+        Doctor newDoctor = new Doctor();
+        newDoctor.setSpeciality(doctor.getSpeciality());
+        newDoctor.setLicenseNumber(doctor.getLicenseNumber());
+        user.get().setRole(Role.DOCTOR);
+        newDoctor.setUser(user.get());
+        return doctorRepo.save(newDoctor);
+    }
     public Doctor findDoctorById(Long id){
         return doctorRepo.findDoctorById(id);
     }
@@ -91,7 +118,24 @@ public class DoctorService {
         return "Appointment was marked as completed successfully by doctor " + doctorId;
     }
 
-    public Prescription addPresciption(Long doctorId, Long appointmentId, Medication medication) throws DoctorNotFoundException, AppointmentNotFoundException{
+    public Prescription addPrescription(Long doctorId, Long appointmentId, Medication medication) throws DoctorNotFoundException, AppointmentNotFoundException{
         return prescriptionService.addPrescription(doctorId,appointmentId,medication);
+    }
+
+    public List<Appointment> getAllAppointments(Long id){
+        return appointmentRepo.findByDoctorId(id);
+    }
+    public List<Appointment> getTodayAppointments(Long doctorId){
+        LocalDate time = LocalDate.now();
+        LocalDateTime startOfDay = time.atStartOfDay();
+        LocalDateTime endOfDay = time.atTime(LocalTime.MAX);
+        List<Appointment> appointments = appointmentRepo.findAll();
+        List<Appointment> todayAppointments = new ArrayList<>();
+        for(Appointment app : appointments){
+            if(app.getDoctor().getId() == doctorId && app.getStatus() == Status.BOOKED && app.getTime().getDayOfMonth() == LocalDateTime.now().getDayOfMonth()){
+                todayAppointments.add(app);
+            }
+        }
+        return todayAppointments;
     }
 }

@@ -10,6 +10,7 @@ import com.smartHealthCareAppointmentSystem.HealthCareSystem.service.DoctorServi
 import com.smartHealthCareAppointmentSystem.HealthCareSystem.service.PatientService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -27,9 +28,14 @@ public class PatientController {
         this.patientService = patientService;
         this.appointmentService = appointmentService;
     }
+//    @GetMapping("/")
+//    public String returnSomethig(){
+//        return "Patient";
+//    }
 
     @GetMapping("/searchDoctor")
-    public Doctor searchDoctor(@RequestParam("speciality") String speciality) throws DoctorNotFoundException {
+    public Doctor searchDoctor(@RequestParam("speciality") String speciality, Authentication auth) throws DoctorNotFoundException {
+        System.out.println(auth.getAuthorities());
         return doctorService.searchDoctorBySpeciality(speciality);
     }
 

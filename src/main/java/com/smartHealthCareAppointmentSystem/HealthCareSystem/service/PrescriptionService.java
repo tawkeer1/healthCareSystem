@@ -30,6 +30,7 @@ public class PrescriptionService {
         if(!appointment.isPresent()) throw new AppointmentNotFoundException("Appointment doesn't exist");
         if(doctor == null) throw new DoctorNotFoundException("Doctor you want to add prescription doesn't exist");
         if(doctor.getId() != appointment.get().getDoctor().getId()) throw new RuntimeException("Please select your own appointment to add prescription");
+        if(appointment.get().getStatus() == Status.COMPLETED) throw new RuntimeException("The prescription has already been added by the doctor");
         Prescription prescription = new Prescription();
         prescription.setDoctorId(doctor.getId());
         prescription.setAppointmentId(appointment.get().getId());
@@ -38,6 +39,8 @@ public class PrescriptionService {
         prescription.setMedicines(medication.getMedicines());
         prescription.setDosage(medication.getDosage());
         prescription.setLabReports(medication.getLabReports());
+        //once doctor adds prescription the appointment can be said to be complete
+        appointment.get().setStatus(Status.COMPLETED);
         return prescriptionRepo.save(prescription);
     }
 

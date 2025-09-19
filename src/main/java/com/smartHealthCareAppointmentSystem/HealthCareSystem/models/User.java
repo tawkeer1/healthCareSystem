@@ -18,7 +18,6 @@ public class User {
 //    @Size(min = 8, message = "Please length cannot be less than 8 characters")
     @PasswordValidator
     private String password;
-    @NotNull(message = "Role cannot be null")
     @Enumerated(EnumType.STRING)
     private Role role;
 

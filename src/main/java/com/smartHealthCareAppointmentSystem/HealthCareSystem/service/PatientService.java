@@ -2,30 +2,54 @@ package com.smartHealthCareAppointmentSystem.HealthCareSystem.service;
 
 import com.smartHealthCareAppointmentSystem.HealthCareSystem.customexceptions.DoctorNotFoundException;
 import com.smartHealthCareAppointmentSystem.HealthCareSystem.customexceptions.PatientNotFoundException;
+import com.smartHealthCareAppointmentSystem.HealthCareSystem.customexceptions.UserNotFoundException;
 import com.smartHealthCareAppointmentSystem.HealthCareSystem.models.*;
+import com.smartHealthCareAppointmentSystem.HealthCareSystem.repositories.DoctorRepo;
 import com.smartHealthCareAppointmentSystem.HealthCareSystem.repositories.PatientRepo;
 import com.smartHealthCareAppointmentSystem.HealthCareSystem.repositories.PrescriptionRepo;
+import com.smartHealthCareAppointmentSystem.HealthCareSystem.repositories.UserRepo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class PatientService {
     private final PatientRepo patientRepo;
     private final PrescriptionService prescriptionService;
+    private final UserRepo userRepo;
+    private final DoctorRepo doctorRepo;
     @Autowired
-    public PatientService(PatientRepo patientRepo, PrescriptionService prescriptionService){
+    public PatientService(PatientRepo patientRepo, PrescriptionService prescriptionService, UserRepo userRepo, DoctorRepo doctorRepo){
         this.patientRepo = patientRepo;
         this.prescriptionService = prescriptionService;
+        this.userRepo = userRepo;
+        this.doctorRepo = doctorRepo;
     }
-    public ResponseEntity<Response> createPatient(Patient patient){
-        if(patient == null ) throw new NullPointerException("Patient cannot be null");
-        Response response = new Response("200","createdUserSuccessfully");
-        return ResponseEntity.ok(response);
+    public Patient createPatient(Patient patient){
+        if(patient == null ) throw new NullPointerException("Patient details cannot be null");
+        patient.getUser().setRole(Role.PATIENT);
+        return patientRepo.save(patient);
     }
 
+    public Patient createPatientIfUserExists(PatientRequest patientRequest, Long userId) throws UserNotFoundException{
+        Optional<User> user = userRepo.findById(userId);
+        if(!user.isPresent()) throw new UserNotFoundException("User not found");
+        if(user.get().getId() == null) throw new UserNotFoundException("User does not exist");
+        //if this user is already linked to someone
+        Patient patient = patientRepo.findPatientByUserId(userId);
+        Doctor existingDoctor = doctorRepo.findDoctorByUserId(userId);
+        if(patient != null || existingDoctor != null) throw new RuntimeException("User is already linked to someone");
+        Patient newPatient = new Patient();
+        newPatient.setAddress(patientRequest.getAddress());
+        newPatient.setMedicalHistory(patientRequest.getMedicalHistory());
+        newPatient.setFamilyHistory(patientRequest.getFamilyHistory());
+        user.get().setRole(Role.PATIENT);
+        newPatient.setUser(user.get());
+        return patientRepo.save(newPatient);
+    }
     public Patient findPatientById(Long id){
         return patientRepo.findPatientById(id);
     }
