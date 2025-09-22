@@ -10,5 +10,5 @@ import java.util.List;
 public interface PatientRepo extends JpaRepository<Patient,Long> {
     Patient findPatientById(Long id);
     Page<Patient> findAll(Pageable pageable);
-    Patient findPatientByUserId(Long userId);
+    Patient findByUserId(Long userId);
 }

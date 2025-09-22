@@ -33,7 +33,11 @@ public class AdminService {
         List<Patient> patientContent = patientPage.getContent();
         return patientContent;
     }
-    public List<Doctor> getAllDoctors(){
-        return doctorRepo.findAll();
+    public List<Doctor> getAllDoctors(int pageNum){
+        int size = 2;
+        Pageable pageable = PageRequest.of(pageNum-1,size);
+        Page<Doctor> doctorPage = doctorRepo.findAll(pageable);
+        List<Doctor> doctorsContent = doctorPage.getContent();
+        return doctorsContent;
     }
 }

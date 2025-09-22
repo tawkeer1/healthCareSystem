@@ -18,6 +18,8 @@ public class Appointment {
     @JoinColumn(name = "doctor_id", referencedColumnName = "id", nullable = false)
     private Doctor doctor;
     private LocalDateTime time;
+    private LocalDateTime startTime;
+    private LocalDateTime endTime;
     @NotNull
     @Enumerated(EnumType.STRING)
     private Status status; // can be booked, cancelled, completed
@@ -60,5 +62,21 @@ public class Appointment {
 
     public void setStatus(Status status) {
         this.status = status;
+    }
+
+    public LocalDateTime getStartTime() {
+        return startTime;
+    }
+
+    public void setStartTime(LocalDateTime startTime) {
+        this.startTime = startTime;
+    }
+
+    public LocalDateTime getEndTime() {
+        return endTime;
+    }
+
+    public void setEndTime(LocalDateTime endTime) {
+        this.endTime = endTime;
     }
 }

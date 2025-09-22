@@ -7,6 +7,7 @@ import com.smartHealthCareAppointmentSystem.HealthCareSystem.repositories.Appoin
 import com.smartHealthCareAppointmentSystem.HealthCareSystem.repositories.DoctorRepo;
 import com.smartHealthCareAppointmentSystem.HealthCareSystem.repositories.PrescriptionRepo;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -24,13 +25,14 @@ public class PrescriptionService {
         this.doctorRepo = doctorRepo;
         this.appointmentRepo = appointmentRepo;
     }
-    public Prescription addPrescription(Long doctorId, Long appointmentId, Medication medication) throws AppointmentNotFoundException, DoctorNotFoundException {
+    public Prescription addPrescription(Long doctorId, Long appointmentId, Medication medication, Authentication authentication) throws AppointmentNotFoundException, DoctorNotFoundException {
         Doctor doctor = doctorRepo.findDoctorById(doctorId);
         Optional<Appointment> appointment = appointmentRepo.findById(appointmentId);
         if(!appointment.isPresent()) throw new AppointmentNotFoundException("Appointment doesn't exist");
         if(doctor == null) throw new DoctorNotFoundException("Doctor you want to add prescription doesn't exist");
         if(doctor.getId() != appointment.get().getDoctor().getId()) throw new RuntimeException("Please select your own appointment to add prescription");
         if(appointment.get().getStatus() == Status.COMPLETED) throw new RuntimeException("The prescription has already been added by the doctor");
+        if(appointment.get().getStatus() == Status.CANCELLED) throw new RuntimeException("The appointment has already been cancelled");
         Prescription prescription = new Prescription();
         prescription.setDoctorId(doctor.getId());
         prescription.setAppointmentId(appointment.get().getId());

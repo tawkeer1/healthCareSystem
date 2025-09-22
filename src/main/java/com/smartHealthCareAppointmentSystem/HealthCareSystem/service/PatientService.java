@@ -1,8 +1,6 @@
 package com.smartHealthCareAppointmentSystem.HealthCareSystem.service;
 
-import com.smartHealthCareAppointmentSystem.HealthCareSystem.customexceptions.DoctorNotFoundException;
-import com.smartHealthCareAppointmentSystem.HealthCareSystem.customexceptions.PatientNotFoundException;
-import com.smartHealthCareAppointmentSystem.HealthCareSystem.customexceptions.UserNotFoundException;
+import com.smartHealthCareAppointmentSystem.HealthCareSystem.customexceptions.*;
 import com.smartHealthCareAppointmentSystem.HealthCareSystem.models.*;
 import com.smartHealthCareAppointmentSystem.HealthCareSystem.repositories.DoctorRepo;
 import com.smartHealthCareAppointmentSystem.HealthCareSystem.repositories.PatientRepo;
@@ -10,6 +8,7 @@ import com.smartHealthCareAppointmentSystem.HealthCareSystem.repositories.Prescr
 import com.smartHealthCareAppointmentSystem.HealthCareSystem.repositories.UserRepo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -28,8 +27,11 @@ public class PatientService {
         this.userRepo = userRepo;
         this.doctorRepo = doctorRepo;
     }
-    public Patient createPatient(Patient patient){
+    public Patient createPatient(Patient patient) throws UserAlreadyExistsException{
         if(patient == null ) throw new NullPointerException("Patient details cannot be null");
+        User exisitingUser = userRepo.findByEmail(patient.getUser().getEmail());
+        if(exisitingUser != null) throw new UserAlreadyExistsException("User with this email already exists");
+
         patient.getUser().setRole(Role.PATIENT);
         return patientRepo.save(patient);
     }
@@ -39,7 +41,7 @@ public class PatientService {
         if(!user.isPresent()) throw new UserNotFoundException("User not found");
         if(user.get().getId() == null) throw new UserNotFoundException("User does not exist");
         //if this user is already linked to someone
-        Patient patient = patientRepo.findPatientByUserId(userId);
+        Patient patient = patientRepo.findByUserId(userId);
         Doctor existingDoctor = doctorRepo.findDoctorByUserId(userId);
         if(patient != null || existingDoctor != null) throw new RuntimeException("User is already linked to someone");
         Patient newPatient = new Patient();
@@ -61,13 +63,11 @@ public class PatientService {
         return "Deleted Patient successfully";
     }
 
-    public Patient updatePatient(Long id, Patient updatedPatient) throws PatientNotFoundException{
+    public Patient updatePatient(Long id, PatientRequest updatedPatient,Authentication authentication) throws PatientNotFoundException,UnauthorizedUserException{
         Patient patient = patientRepo.findPatientById(id);
-        User patientUser = patient.getUser();
-        User updatedPatientUser = updatedPatient.getUser();
-        if(updatedPatient == null ) throw new NullPointerException("Updated patient cannot be null");
+        if(updatedPatient == null ) throw new NullPointerException("Updated patient details cannot be null");
         if(patient == null || patient.getId() == null) throw new PatientNotFoundException("Patient you want to update doesn't exist");
-        if(patientUser == null) throw new PatientNotFoundException("Patient User doesn't exist");
+        if(!(authentication.getAuthorities().equals("ADMIN"))) throw new UnauthorizedUserException("You are not an admin");
         if(updatedPatient.getAddress() != null){
             patient.setAddress(updatedPatient.getAddress());
         }
@@ -77,45 +77,73 @@ public class PatientService {
         if(updatedPatient.getMedicalHistory() != null){
             patient.setMedicalHistory(updatedPatient.getMedicalHistory());
         }
-
-        if(updatedPatientUser != null && updatedPatientUser.getName() != null){
-            patientUser.setName(updatedPatientUser.getName());
-        }
-        if(updatedPatientUser != null && updatedPatientUser.getEmail() != null){
-            patientUser.setEmail(updatedPatientUser.getEmail());
-        }
-        if(updatedPatientUser != null && updatedPatientUser.getPassword() != null){
-            patientUser.setPassword(updatedPatientUser.getPassword());
+        if(updatedPatient.getName() != null){
+            patient.getUser().setName(updatedPatient.getName());
         }
         return patientRepo.save(patient);
     }
-    public Patient updatePersonalDetails(Long id, Patient updatedPatient) throws PatientNotFoundException{
-        Patient patient = patientRepo.findPatientById(id);
+//    public Patient updatePersonalDetails(Long id, PatientRequest updatedPatient, Authentication authentication) throws PatientNotFoundException,UnauthorizedUserException{
+//        Patient patient = patientRepo.findPatientById(id);
+//        if(patient == null) throw new PatientNotFoundException("Your details not found");
+//        if(updatedPatient == null) throw new PatientNotFoundException("The details to be updated not found");
+//        if(authentication.getName().equals(patient.getUser().getEmail())) throw new UnauthorizedUserException("You can only update your own details");
+//        if(updatedPatient.getName() != null) {
+//            patient.getUser().setName(updatedPatient.getName());
+//        }
+//        if(updatedPatient.getAddress() != null){
+//            patient.setAddress(updatedPatient.getAddress());
+//        } else {
+//            throw new RuntimeException("The updated address does not exist");
+//        }
+//
+//        if(updatedPatient.getMedicalHistory() != null){
+//            patient.setMedicalHistory(updatedPatient.getMedicalHistory());
+//        } else {
+//            throw new RuntimeException("The updated medical history does not exist");
+//        }
+//
+//        if(updatedPatient.getFamilyHistory() != null){
+//            patient.setFamilyHistory(updatedPatient.getFamilyHistory());
+//        } else {
+//            throw new RuntimeException("The updated family History does not exist");
+//        }
+//        return patientRepo.save(patient);
+//    }
+
+    public Patient updatePersonalDetails(PatientRequest updatedPatient, Authentication authentication) throws UserNotFoundException, PatientNotFoundException,UnauthorizedUserException{
+        String email = authentication.getName();
+        if(email == null) throw new RuntimeException("Login details not found. Please login");
+        User user = userRepo.findByEmail(email);
+        if(user == null) throw new UserNotFoundException("User not found");
+        Patient patient = patientRepo.findByUserId(user.getId());
         if(patient == null) throw new PatientNotFoundException("Your details not found");
         if(updatedPatient == null) throw new PatientNotFoundException("The details to be updated not found");
+//        if(authentication.getName().equals(patient.getUser().getEmail())) throw new UnauthorizedUserException("You can only update your own details");
+        if(updatedPatient.getName() != null) {
+            patient.getUser().setName(updatedPatient.getName());
+        }
         if(updatedPatient.getAddress() != null){
             patient.setAddress(updatedPatient.getAddress());
-        } else {
-            throw new RuntimeException("The updated address does not exist");
         }
 
         if(updatedPatient.getMedicalHistory() != null){
             patient.setMedicalHistory(updatedPatient.getMedicalHistory());
-        } else {
-            throw new RuntimeException("The updated medical history does not exist");
         }
 
         if(updatedPatient.getFamilyHistory() != null){
             patient.setFamilyHistory(updatedPatient.getFamilyHistory());
-        } else {
-            throw new RuntimeException("The updated family History does not exist");
         }
         return patientRepo.save(patient);
     }
 
-    public List<Prescription> getPrescriptionHistory(Long id) throws PatientNotFoundException{
-        Patient patient = patientRepo.findPatientById(id);
+    public List<Prescription> getPrescriptionHistory(Authentication authentication) throws UserNotFoundException, PatientNotFoundException{
+        String email = authentication.getName();
+        if(email == null) throw new RuntimeException("Login details not found. Please login");
+        User user = userRepo.findByEmail(email);
+        if(user == null) throw new UserNotFoundException("User not found");
+
+        Patient patient = patientRepo.findByUserId(user.getId());
         if(patient == null) throw new PatientNotFoundException("Patient not found");
-        return prescriptionService.getPrescriptionHistory(id);
+        return prescriptionService.getPrescriptionHistory(patient.getId());
     }
 }

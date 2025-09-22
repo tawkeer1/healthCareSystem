@@ -4,7 +4,7 @@ public class PatientRequest {
     private String address;
     private String medicalHistory;
     private String familyHistory;
-
+    private String name;
     public String getAddress() {
         return address;
     }
@@ -27,5 +27,13 @@ public class PatientRequest {
 
     public void setFamilyHistory(String familyHistory) {
         this.familyHistory = familyHistory;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
     }
 }

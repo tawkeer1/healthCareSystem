@@ -1,0 +1,13 @@
+<cache alias="doctorCache">
+    <heap unit="entries">500</heap>
+    <expiry>
+        <ttl unit="minutes">10</ttl>
+    </expiry>
+</cache>
+
+<cache alias="org.hibernate.cache.internal.StandardQueryCache">
+<heap unit="entries">100</heap>
+<expiry>
+    <ttl unit="minutes">5</ttl>
+</expiry>
+</cache>

@@ -4,10 +4,14 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
+import org.hibernate.annotations.CacheConcurrencyStrategy;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Entity
+@Cacheable
+@org.hibernate.annotations.Cache(usage = CacheConcurrencyStrategy.READ_WRITE, region = "doctorCache")
 public class Doctor {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -19,8 +23,7 @@ public class Doctor {
     private String speciality;
     @Size(min = 3, max = 20, message = "License number should be between 3 and 20 characters")
     private String licenseNumber;
-//    private LocalDateTime startTime;
-//    private LocalDateTime endTime;
+    Long appCount = 0L;
     public Long getId() {
         return id;
     }
@@ -68,4 +71,12 @@ public class Doctor {
 //    public void setEndTime(LocalDateTime endTime) {
 //        this.endTime = endTime;
 //    }
+
+    public Long getAppCount() {
+        return appCount;
+    }
+
+    public void setAppCount(Long appCount) {
+        this.appCount = appCount;
+    }
 }

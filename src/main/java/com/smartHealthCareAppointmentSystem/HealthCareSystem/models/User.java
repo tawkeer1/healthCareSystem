@@ -1,5 +1,7 @@
 package com.smartHealthCareAppointmentSystem.HealthCareSystem.models;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.smartHealthCareAppointmentSystem.HealthCareSystem.annotations.PasswordValidator;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
@@ -17,6 +19,7 @@ public class User {
     private String email;
 //    @Size(min = 8, message = "Please length cannot be less than 8 characters")
     @PasswordValidator
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     private String password;
     @Enumerated(EnumType.STRING)
     private Role role;

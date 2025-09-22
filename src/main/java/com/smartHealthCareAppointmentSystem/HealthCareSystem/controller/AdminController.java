@@ -1,17 +1,14 @@
 package com.smartHealthCareAppointmentSystem.HealthCareSystem.controller;
 
-import com.smartHealthCareAppointmentSystem.HealthCareSystem.customexceptions.DoctorNotFoundException;
-import com.smartHealthCareAppointmentSystem.HealthCareSystem.customexceptions.PatientNotFoundException;
-import com.smartHealthCareAppointmentSystem.HealthCareSystem.customexceptions.UserNotFoundException;
+import com.smartHealthCareAppointmentSystem.HealthCareSystem.customexceptions.*;
 import com.smartHealthCareAppointmentSystem.HealthCareSystem.models.*;
-import com.smartHealthCareAppointmentSystem.HealthCareSystem.repositories.PatientRepo;
 import com.smartHealthCareAppointmentSystem.HealthCareSystem.service.AdminService;
 import com.smartHealthCareAppointmentSystem.HealthCareSystem.service.DoctorService;
 import com.smartHealthCareAppointmentSystem.HealthCareSystem.service.PatientService;
+import jakarta.persistence.QueryHint;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page;
-import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -29,7 +26,7 @@ public class AdminController {
         this.adminService = adminService;
     }
     @PostMapping("/createDoctor")
-    public Doctor createDoctor(@Valid @RequestBody Doctor doctor) throws DoctorNotFoundException{
+    public Doctor createDoctor(@Valid @RequestBody Doctor doctor) throws DoctorNotFoundException, UserAlreadyExistsException {
        return doctorService.createDoctor(doctor);
     }
 
@@ -38,15 +35,15 @@ public class AdminController {
         return doctorService.createDoctorIfUserExists(doctor,userId);
     }
     @PatchMapping("/updateDoctor/{id}")
-    public Doctor updateDoctor(@PathVariable("id") Long id, @Valid @RequestBody Doctor updatedDoctor) throws DoctorNotFoundException{
-        return doctorService.updateDoctor(id,updatedDoctor);
+    public Doctor updateDoctor(@PathVariable("id") Long id, @Valid @RequestBody DoctorRequest updatedDoctor, Authentication authentication) throws UnauthorizedUserException, DoctorNotFoundException{
+        return doctorService.updateDoctor(id,updatedDoctor,authentication);
     }
     @DeleteMapping("/deleteDoctor/{id}")
     public String deleteDoctor(@PathVariable("id") Long id) throws DoctorNotFoundException{
         return doctorService.deleteDoctor(id);
     }
     @PostMapping("/createPatient")
-    public Patient createPatient(@Valid @RequestBody Patient patient) throws PatientNotFoundException{
+    public Patient createPatient(@Valid @RequestBody Patient patient) throws UserAlreadyExistsException, PatientNotFoundException{
          return patientService.createPatient(patient);
     }
 
@@ -55,8 +52,8 @@ public class AdminController {
         return patientService.createPatientIfUserExists(patient, userId);
     }
     @PatchMapping("/updatePatient/{id}")
-    public Patient updatePatient(@PathVariable("id") Long id, @Valid @RequestBody Patient patient) throws PatientNotFoundException{
-        return patientService.updatePatient(id,patient);
+    public Patient updatePatient(@PathVariable("id") Long id, @Valid @RequestBody PatientRequest patient, Authentication authentication) throws PatientNotFoundException, UnauthorizedUserException{
+        return patientService.updatePatient(id,patient,authentication);
     }
     @DeleteMapping("/deletePatient/{id}")
     public String deletePatient(@PathVariable("id") Long id) throws PatientNotFoundException{
@@ -66,8 +63,12 @@ public class AdminController {
     public List<Patient> getAllPatients(@PathVariable("pageNum") int page){
         return adminService.getAllPatients(page);
     }
-    @GetMapping("/allDoctors")
-    public List<Doctor> getAllDoctors(){
-        return adminService.getAllDoctors();
+    @GetMapping("/allDoctors/{pageNum}")
+    public List<Doctor> getAllDoctors(@PathVariable("pageNum") int page){
+        return adminService.getAllDoctors(page);
+    }
+    @GetMapping("/mostFrequentlyUsedDoctors")
+    public List<Doctor> mostFrequentlyUsedDoctors(){
+        return doctorService.mostFrequentlyUsedDoctors();
     }
 }
