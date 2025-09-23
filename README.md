@@ -8,7 +8,8 @@ or can mark appointments as completed.
 Patients can book or cancel appointment to a doctor based on their speciality and appointment will be booked only if doctor is not busy with 
 another appointment.
 Patients can also view their prescription history which includes medication, dosage and labreports.
-Users can update their personal details including name, address or speciality.
+Users can update their personal details including name, address, medical history, family history for patient and
+speciality and licenseNumber for doctor.
 
 # Features
 - User Authentication(spring security basic auth)
@@ -20,7 +21,7 @@ Users can update their personal details including name, address or speciality.
 - Custom password validator to validate password strength.
 - Custom exceptions for handling different error scenarios.
 - Validation for class fields.
-- pagination while displaying doctors and patients
+- Pagination while displaying doctors and patients
 
 # How to run the app
 - Clone the repository
