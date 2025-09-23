@@ -33,7 +33,6 @@ Users can update their personal details including name, address or speciality.
 # Postman screenshots
 # Booking appointment if doctor is busy
 ![img_1.png](screenshots/bookappointment.png)
-    result
     ![img_1.png](resultofbookappointment.png)
 # Booking if doctor is available
 ![img_1.png](screenshots/Bookingifavailable.png)
