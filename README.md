@@ -20,6 +20,7 @@ Users can update their personal details including name, address or speciality.
 - Custom password validator to validate password strength.
 - Custom exceptions for handling different error scenarios.
 - Validation for class fields.
+- pagination while displaying doctors and patients
 
 # How to run the app
 - Clone the repository
