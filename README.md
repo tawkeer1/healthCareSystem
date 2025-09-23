@@ -19,6 +19,7 @@ Users can update their personal details including name, address or speciality.
 - hibernate cache to store most frequently booked doctors.
 - Custom password validator to validate password strength.
 - Custom exceptions for handling different error scenarios.
+- Validation for class fields.
 
 # How to run the app
 - Clone the repository
@@ -42,7 +43,7 @@ Users can update their personal details including name, address or speciality.
 ![img_1.png](screenshots/cancellingown.png)
 # Add prescription by doctor
 ![img_2.png](screenshots/addprescription.png)
-# Only admin can create doctor
+# Only admin can create User
 ![img_1.png](screenshots/img_1.png)
 ![img_2.png](screenshots/img_2.png)
 
