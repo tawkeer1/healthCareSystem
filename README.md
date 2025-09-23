@@ -12,7 +12,7 @@ Users can update their personal details including name, address or speciality.
 
 # Features
 - User Authentication(spring security basic auth)
-- Role Based Authorization(doctor can only access /api/doctor and patient /api/patient)
+- Role Based Authorization(doctor can only access /api/doctor and patient can only access /api/patient)
 - mysql database to store users and mongodb to store prescriptions
 - Global Exception Handler
 - Aspect Oriented Programming(AOP) for logging the booking of appointments and prescription updates.
@@ -30,7 +30,7 @@ Users can update their personal details including name, address or speciality.
 # Flow diagram of the app
 ![img.png](screenshots/img.png)
 
-# Postman api screenshots
+# Postman screenshots
 # Booking appointment if doctor is busy
 ![img_1.png](screenshots/bookappointment.png)
     result
