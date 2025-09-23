@@ -10,7 +10,7 @@ import java.util.List;
 import java.util.Map;
 
 @Document(collection = "prescription")
-public class Prescription {
+public class Prescription{
     @Id
     private String id;
     @NotNull

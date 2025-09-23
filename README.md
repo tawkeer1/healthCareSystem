@@ -25,3 +25,24 @@ Users can update their personal details including name, address or speciality.
 - Configure the databases in application.properties file
 - Run command "mvn clean install" to build the app
 - Run the app using command "mvn spring-boot:run" or the run button in your IDE.
+
+# Flow diagram of the app
+![img.png](img.png)
+
+# Postman api screenshots
+# Booking appointment if doctor is busy
+![img_1.png](bookappointment.png)
+    result
+    ![img_1.png](resultofbookappointment.png)
+# Booking if doctor is available
+![img_1.png](Bookingifavailable.png)
+# Cancelling someone else's appointment
+![img_1.png](cacellingotherapp.png)
+# Cancelling own appointment
+![img_1.png](cancellingown.png)
+# Add prescription by doctor
+![img_2.png](addprescription.png)
+# Only admin can create doctor
+![img_1.png](img_1.png)
+![img_2.png](img_2.png)
+

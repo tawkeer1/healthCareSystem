@@ -12,7 +12,7 @@ import java.util.List;
 @Entity
 @Cacheable
 @org.hibernate.annotations.Cache(usage = CacheConcurrencyStrategy.READ_WRITE, region = "doctorCache")
-public class Doctor {
+public class Doctor{
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
