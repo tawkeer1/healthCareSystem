@@ -1,6 +1,6 @@
 # Smart Health Care Appointment System
 # Description
-A smart health care appointment system that allows patients to book appointments with doctors and view their appointment history.
+A smart health care appointment system that allows patients to book appointments with doctors and view their prescription history.
 Admin can create, delete or update doctors and patients or view all patients and doctors. Patient or doctor can be created on its own or can be linked 
 to an already existing user in database.
 Doctors can view their appointments or specifically today's appointments and add prescription to the patient's appointments
