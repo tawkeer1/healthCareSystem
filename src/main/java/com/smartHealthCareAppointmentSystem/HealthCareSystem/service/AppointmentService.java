@@ -99,7 +99,7 @@ public class AppointmentService {
         if(patient == null) throw new PatientNotFoundException("Patient does not exist");
         Optional<Appointment> appointment = appointmentRepo.findById(appointmentId);
         if(!appointment.isPresent()) throw new AppointmentNotFoundException("Appointment " + appointmentId + " not found");
-        if(appointment.get().getPatient().getId().equals(patient.getId())){
+        if(!(appointment.get().getPatient().getId().equals(patient.getId()))){
             throw new RuntimeException("Please enter your own valid appointment id");
         }
         if(appointment.get().getStatus() == Status.CANCELLED) throw new RuntimeException("Appointment is already cancelled");

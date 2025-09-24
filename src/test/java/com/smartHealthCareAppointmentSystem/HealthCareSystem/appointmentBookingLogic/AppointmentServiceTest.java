@@ -102,14 +102,18 @@ class AppointmentServiceTest {
         when(authentication.getName()).thenReturn(user.getEmail());
         when(userRepo.findByEmail(user.getEmail())).thenReturn(user);
         when(patientRepo.findByUserId(user.getId())).thenReturn(patient);
-        when(appointmentRepo.findById(appointment.getId())).thenReturn(Optional.of(appointment));
 
-        // appointment belongs to another patient
-        appointment.getPatient().setId(99L);
+        // appointment belongs to another patient object
+        Patient otherPatient = new Patient();
+        otherPatient.setId(99L);
+        appointment.setPatient(otherPatient);
+
+        when(appointmentRepo.findById(appointment.getId())).thenReturn(Optional.of(appointment));
 
         RuntimeException exception = assertThrows(RuntimeException.class,
                 () -> appointmentService.cancelAppointment(appointment.getId(), authentication));
         assertEquals("Please enter your own valid appointment id", exception.getMessage());
     }
+
 }
 
