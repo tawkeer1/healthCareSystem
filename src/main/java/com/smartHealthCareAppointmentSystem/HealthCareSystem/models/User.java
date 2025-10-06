@@ -9,6 +9,7 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
 @Entity
+@Inheritance(strategy = InheritanceType.JOINED)
 public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -16,10 +17,12 @@ public class User {
     @NotNull(message = "Name cannot be null")
     private String name;
     @Email(message = "Please enter a valid email address")
+    @NotNull(message = "Email cannot be null")
     private String email;
 //    @Size(min = 8, message = "Please length cannot be less than 8 characters")
     @PasswordValidator
     @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
+    @NotNull(message = "Password cannot be null")
     private String password;
     @Enumerated(EnumType.STRING)
     private Role role;

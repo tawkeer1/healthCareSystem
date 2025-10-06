@@ -1,4 +1,4 @@
-package com.smartHealthCareAppointmentSystem.HealthCareSystem.models;
+package com.smartHealthCareAppointmentSystem.HealthCareSystem.dto;
 
 import jakarta.validation.constraints.NotNull;
 
@@ -6,6 +6,10 @@ public class DoctorRequest {
     String speciality;
     String licenseNumber;
     String name;
+
+    public DoctorRequest() {
+    }
+
     public String getSpeciality() {
         return speciality;
     }

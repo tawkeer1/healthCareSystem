@@ -13,9 +13,9 @@ import java.util.List;
 
 public interface DoctorRepo extends JpaRepository<Doctor,Long> {
     Doctor findDoctorById(Long id);
+    Doctor findByEmail(String email);
     Doctor findDoctorBySpeciality(String speciality);
     List<Doctor> findDoctorsBySpeciality(String speciality);
-    Doctor findDoctorByUserId(Long userId);
     @Query("select d from Doctor d order by d.appCount desc")
     @QueryHints(value = @QueryHint(name = "org.hibernate.cacheable", value = "true"))
     List<Doctor> findMostFrequentlyUsedDoctors(Pageable pageable);

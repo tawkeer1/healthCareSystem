@@ -1,23 +1,20 @@
 package com.smartHealthCareAppointmentSystem.HealthCareSystem.appointmentBookingLogic;
-import com.smartHealthCareAppointmentSystem.HealthCareSystem.customexceptions.DoctorBusyException;
+
+import com.smartHealthCareAppointmentSystem.HealthCareSystem.customexceptions.*;
 import com.smartHealthCareAppointmentSystem.HealthCareSystem.models.*;
-import com.smartHealthCareAppointmentSystem.HealthCareSystem.repositories.AppointmentRepo;
-import com.smartHealthCareAppointmentSystem.HealthCareSystem.repositories.DoctorRepo;
-import com.smartHealthCareAppointmentSystem.HealthCareSystem.repositories.PatientRepo;
-import com.smartHealthCareAppointmentSystem.HealthCareSystem.repositories.UserRepo;
+import com.smartHealthCareAppointmentSystem.HealthCareSystem.repositories.*;
 import com.smartHealthCareAppointmentSystem.HealthCareSystem.service.AppointmentService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.*;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.security.core.Authentication;
 
 import java.time.LocalDateTime;
-import java.util.Optional;
+import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
-        import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class AppointmentServiceTest {
@@ -29,91 +26,137 @@ class AppointmentServiceTest {
     private AppointmentRepo appointmentRepo;
 
     @Mock
-    private UserRepo userRepo;
+    private DoctorRepo doctorRepo;
 
     @Mock
     private PatientRepo patientRepo;
 
-    @Mock
-    private DoctorRepo doctorRepo;
-
-    @Mock
-    private Authentication authentication;
-
-    private User user;
-    private Patient patient;
     private Doctor doctor;
-    private Appointment appointment;
+    private Patient patient;
+    private Appointment existingAppointment;
 
     @BeforeEach
     void setUp() {
-        user = new User();
-        user.setId(1L);
-        user.setEmail("patient@example.com");
-
         patient = new Patient();
         patient.setId(1L);
-        patient.setUser(user);
 
         doctor = new Doctor();
         doctor.setId(1L);
-        doctor.setUser(new User());
+        doctor.setAppCount(0L);
         doctor.setSpeciality("Cardiology");
 
-        appointment = new Appointment();
-        appointment.setId(1L);
-        appointment.setDoctor(doctor);
-        appointment.setPatient(patient);
-        appointment.setStartTime(LocalDateTime.now().plusHours(1));
-        appointment.setEndTime(LocalDateTime.now().plusHours(2));
-        appointment.setStatus(Status.BOOKED);
+        existingAppointment = new Appointment();
+        existingAppointment.setId(10L);
+        existingAppointment.setDoctor(doctor);
+        existingAppointment.setPatient(patient);
+        existingAppointment.setStartTime(LocalDateTime.now().plusHours(1));
+        existingAppointment.setEndTime(LocalDateTime.now().plusHours(2));
+        existingAppointment.setStatus(Status.BOOKED);
     }
 
     @Test
     void testBookAppointment_Success() throws Exception {
-        when(authentication.getName()).thenReturn(user.getEmail());
-        when(userRepo.findByEmail(user.getEmail())).thenReturn(user);
-        when(patientRepo.findByUserId(user.getId())).thenReturn(patient);
-        when(appointmentRepo.findByDoctorIdAndStatus(doctor.getId(), Status.BOOKED)).thenReturn(java.util.Collections.emptyList());
-        when(appointmentRepo.save(any(Appointment.class))).thenReturn(appointment);
+        LocalDateTime startTime = LocalDateTime.now().plusHours(3);
+        LocalDateTime endTime = LocalDateTime.now().plusHours(4);
 
-        Appointment booked = appointmentService.bookAppointment(doctor, appointment.getStartTime(), appointment.getEndTime(), authentication);
+        when(appointmentRepo.findByDoctorIdAndStatus(doctor.getId(), Status.BOOKED))
+                .thenReturn(Collections.emptyList());
+        when(appointmentRepo.save(any(Appointment.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+
+        Appointment booked = appointmentService.bookAppointment(doctor, patient, startTime, endTime);
 
         assertNotNull(booked);
         assertEquals(doctor, booked.getDoctor());
         assertEquals(patient, booked.getPatient());
+        assertEquals(Status.BOOKED, booked.getStatus());
+        verify(doctorRepo, times(1)).save(doctor);
         verify(appointmentRepo, times(1)).save(any(Appointment.class));
     }
 
     @Test
-    void testBookAppointment_DoctorBusy() throws Exception {
-        when(authentication.getName()).thenReturn(user.getEmail());
-        when(userRepo.findByEmail(user.getEmail())).thenReturn(user);
-        when(patientRepo.findByUserId(user.getId())).thenReturn(patient);
-        when(appointmentRepo.findByDoctorIdAndStatus(doctor.getId(), Status.BOOKED)).thenReturn(java.util.List.of(appointment));
+    void testBookAppointment_DoctorBusy() {
+        when(appointmentRepo.findByDoctorIdAndStatus(doctor.getId(), Status.BOOKED))
+                .thenReturn(List.of(existingAppointment));
 
-        assertThrows(DoctorBusyException.class,
-                () -> appointmentService.bookAppointment(doctor, appointment.getStartTime(), appointment.getEndTime(), authentication));
+        LocalDateTime overlappingStart = existingAppointment.getStartTime().plusMinutes(30);
+        LocalDateTime overlappingEnd = existingAppointment.getEndTime().minusMinutes(30);
+
+        assertThrows(DoctorBusyException.class, () ->
+                appointmentService.bookAppointment(doctor, patient, overlappingStart, overlappingEnd));
+    }
+
+
+    @Test
+    void testBookAppointment_InvalidTime() {
+        LocalDateTime startTime = LocalDateTime.now().minusHours(1);
+        LocalDateTime endTime = LocalDateTime.now().plusHours(1);
+
+        assertThrows(NotValidTimeException.class, () ->
+                appointmentService.bookAppointment(doctor, patient, startTime, endTime));
+    }
+
+
+    @Test
+    void testCancelAppointment_Success() throws Exception {
+        existingAppointment.setStatus(Status.BOOKED);
+
+        when(appointmentRepo.findById(existingAppointment.getId()))
+                .thenReturn(Optional.of(existingAppointment));
+        when(appointmentRepo.save(any(Appointment.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+
+        String result = appointmentService.cancelAppointment(existingAppointment.getId(), patient);
+
+        assertEquals("Appointment cancelled successfully", result);
+        assertEquals(Status.CANCELLED, existingAppointment.getStatus());
+        verify(appointmentRepo, times(1)).save(existingAppointment);
     }
 
 
     @Test
     void testCancelAppointment_NotOwned() {
-        when(authentication.getName()).thenReturn(user.getEmail());
-        when(userRepo.findByEmail(user.getEmail())).thenReturn(user);
-        when(patientRepo.findByUserId(user.getId())).thenReturn(patient);
+        Patient other = new Patient();
+        other.setId(99L);
+        existingAppointment.setPatient(other);
 
-        // appointment belongs to another patient object
-        Patient otherPatient = new Patient();
-        otherPatient.setId(99L);
-        appointment.setPatient(otherPatient);
+        when(appointmentRepo.findById(existingAppointment.getId()))
+                .thenReturn(Optional.of(existingAppointment));
 
-        when(appointmentRepo.findById(appointment.getId())).thenReturn(Optional.of(appointment));
+        NotValidAppointmentException exception = assertThrows(NotValidAppointmentException.class, () ->
+                appointmentService.cancelAppointment(existingAppointment.getId(), patient));
 
-        RuntimeException exception = assertThrows(RuntimeException.class,
-                () -> appointmentService.cancelAppointment(appointment.getId(), authentication));
         assertEquals("Please enter your own valid appointment id", exception.getMessage());
     }
 
-}
 
+    @Test
+    void testCancelAppointment_AlreadyCancelled() {
+        existingAppointment.setStatus(Status.CANCELLED);
+        when(appointmentRepo.findById(existingAppointment.getId()))
+                .thenReturn(Optional.of(existingAppointment));
+
+        assertThrows(NotValidAppointmentActionException.class, () ->
+                appointmentService.cancelAppointment(existingAppointment.getId(), patient));
+    }
+
+
+    @Test
+    void testCancelAppointment_Completed() {
+        existingAppointment.setStatus(Status.COMPLETED);
+        when(appointmentRepo.findById(existingAppointment.getId()))
+                .thenReturn(Optional.of(existingAppointment));
+
+        assertThrows(NotValidAppointmentActionException.class, () ->
+                appointmentService.cancelAppointment(existingAppointment.getId(), patient));
+    }
+
+
+    @Test
+    void testCancelAppointment_NotFound() {
+        when(appointmentRepo.findById(999L)).thenReturn(Optional.empty());
+
+        assertThrows(AppointmentNotFoundException.class, () ->
+                appointmentService.cancelAppointment(999L, patient));
+    }
+}

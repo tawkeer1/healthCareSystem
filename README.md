@@ -35,7 +35,7 @@ speciality and licenseNumber for doctor.
 # Postman screenshots
 # Booking appointment if doctor is busy
 ![img_1.png](screenshots/bookappointment.png)
-    ![img_1.png](resultofbookappointment.png)
+    ![img_1.png](screenshots/resultofbookappointment.png)
 # Booking if doctor is available
 ![img_1.png](screenshots/Bookingifavailable.png)
 # Cancelling someone else's appointment

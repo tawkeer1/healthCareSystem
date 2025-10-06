@@ -5,10 +5,9 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 
-import java.util.List;
 
 public interface PatientRepo extends JpaRepository<Patient,Long> {
     Patient findPatientById(Long id);
+    Patient findByEmail(String email);
     Page<Patient> findAll(Pageable pageable);
-    Patient findByUserId(Long userId);
 }

@@ -7,5 +7,4 @@ import java.util.List;
 
 public interface PrescriptionRepo extends MongoRepository<Prescription, String> {
     List<Prescription> findByPatientId(Long id);
-    List<Prescription> findByAppointmentId(Long id);
 }

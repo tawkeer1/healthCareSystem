@@ -8,7 +8,6 @@ import jakarta.validation.constraints.Size;
 import java.util.List;
 
 public class Medication {
-    @NotEmpty
     @NotNull
     List<String> medicines;
     @NotNull

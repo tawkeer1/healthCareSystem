@@ -1,27 +1,27 @@
 package com.smartHealthCareAppointmentSystem.HealthCareSystem.models;
 
 public class Response {
-    private String responseStatus;
-    private String responseMessage;
+    private String status;
+    private String message;
 
-    public Response(String responseStatus, String responseMessage) {
-        this.responseStatus = responseStatus;
-        this.responseMessage = responseMessage;
+    public Response(String status, String message) {
+        this.status = status;
+        this.message = message;
     }
 
-    public String getResponseStatus() {
-        return responseStatus;
+    public String getStatus() {
+        return status;
     }
 
-    public void setResponseStatus(String responseStatus) {
-        this.responseStatus = responseStatus;
+    public void setStatus(String status) {
+        this.status = status;
     }
 
-    public String getResponseMessage() {
-        return responseMessage;
+    public String getMessage() {
+        return message;
     }
 
-    public void setResponseMessage(String responseMessage) {
-        this.responseMessage = responseMessage;
+    public void setMessage(String message) {
+        this.message = message;
     }
 }

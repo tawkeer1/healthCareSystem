@@ -1,11 +1,12 @@
 package com.smartHealthCareAppointmentSystem.HealthCareSystem.controller;
 
 import com.smartHealthCareAppointmentSystem.HealthCareSystem.customexceptions.*;
+import com.smartHealthCareAppointmentSystem.HealthCareSystem.dto.DoctorRequest;
+import com.smartHealthCareAppointmentSystem.HealthCareSystem.dto.PatientRequest;
 import com.smartHealthCareAppointmentSystem.HealthCareSystem.models.*;
 import com.smartHealthCareAppointmentSystem.HealthCareSystem.service.AdminService;
 import com.smartHealthCareAppointmentSystem.HealthCareSystem.service.DoctorService;
 import com.smartHealthCareAppointmentSystem.HealthCareSystem.service.PatientService;
-import jakarta.persistence.QueryHint;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
@@ -26,38 +27,38 @@ public class AdminController {
         this.adminService = adminService;
     }
     @PostMapping("/createDoctor")
-    public Doctor createDoctor(@Valid @RequestBody Doctor doctor) throws DoctorNotFoundException, UserAlreadyExistsException {
+    public Doctor createDoctor(@Valid @RequestBody Doctor doctor) throws UserAlreadyExistsException {
        return doctorService.createDoctor(doctor);
     }
 
-    @PostMapping("/createDoctorForUser")
-    public Doctor createDoctorForUser(@RequestParam("userId") Long userId, @Valid @RequestBody DoctorRequest doctor) throws UserNotFoundException,DoctorNotFoundException {
-        return doctorService.createDoctorIfUserExists(doctor,userId);
-    }
     @PatchMapping("/updateDoctor/{id}")
-    public Doctor updateDoctor(@PathVariable("id") Long id, @Valid @RequestBody DoctorRequest updatedDoctor, Authentication authentication) throws UnauthorizedUserException, DoctorNotFoundException{
-        return doctorService.updateDoctor(id,updatedDoctor,authentication);
+    public Doctor updateDoctor(@PathVariable("id") Long id, @Valid @RequestBody DoctorRequest updatedDoctor) throws DoctorNotFoundException{
+        return doctorService.updateDoctor(id,updatedDoctor);
     }
     @DeleteMapping("/deleteDoctor/{id}")
     public String deleteDoctor(@PathVariable("id") Long id) throws DoctorNotFoundException{
         return doctorService.deleteDoctor(id);
     }
     @PostMapping("/createPatient")
-    public Patient createPatient(@Valid @RequestBody Patient patient) throws UserAlreadyExistsException, PatientNotFoundException{
+    public Patient createPatient(@Valid @RequestBody Patient patient) throws UserAlreadyExistsException{
          return patientService.createPatient(patient);
     }
 
-    @PostMapping("/createPatientForUser")
-    public Patient createPaitentForUser(@RequestParam("userId") Long userId, @Valid @RequestBody PatientRequest patient) throws UserNotFoundException{
-        return patientService.createPatientIfUserExists(patient, userId);
-    }
     @PatchMapping("/updatePatient/{id}")
-    public Patient updatePatient(@PathVariable("id") Long id, @Valid @RequestBody PatientRequest patient, Authentication authentication) throws PatientNotFoundException, UnauthorizedUserException{
-        return patientService.updatePatient(id,patient,authentication);
+    public Patient updatePatient(@PathVariable("id") Long id, @Valid @RequestBody PatientRequest patient) throws PatientNotFoundException{
+        return patientService.updatePatient(id,patient);
     }
     @DeleteMapping("/deletePatient/{id}")
     public String deletePatient(@PathVariable("id") Long id) throws PatientNotFoundException{
         return patientService.deletePatient(id);
+    }
+    @GetMapping("/findDoctorById/{id}")
+    public Doctor findDoctor(@PathVariable("id") Long id){
+        return doctorService.findDoctorById(id);
+    }
+    @GetMapping("/findPatientById/{id}")
+    public Patient findPatient(@PathVariable("id") Long id){
+        return patientService.findPatientById(id);
     }
     @GetMapping("/allPatients/{pageNum}")
     public List<Patient> getAllPatients(@PathVariable("pageNum") int page){

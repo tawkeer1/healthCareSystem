@@ -10,35 +10,15 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 @Entity
-@Cacheable
-@org.hibernate.annotations.Cache(usage = CacheConcurrencyStrategy.READ_WRITE, region = "doctorCache")
-public class Doctor{
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
-    @OneToOne(cascade = CascadeType.ALL, targetEntity = User.class)
-    @JoinColumn(name = "user_id", referencedColumnName = "id")
-    private User user;
+public class Doctor extends User{
     @Size(min = 2, max = 50, message = "Speciality should be between 2 and 50 characters")
+    @NotNull
     private String speciality;
     @Size(min = 3, max = 20, message = "License number should be between 3 and 20 characters")
+    @NotNull
     private String licenseNumber;
+    @NotNull
     Long appCount = 0L;
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
-    }
-
-    public User getUser() {
-        return user;
-    }
-
-    public void setUser(User user) {
-        this.user = user;
-    }
 
     public String getSpeciality() {
         return speciality;
@@ -55,22 +35,6 @@ public class Doctor{
     public void setLicenseNumber(String licenseNumber) {
         this.licenseNumber = licenseNumber;
     }
-
-//    public LocalDateTime getStartTime() {
-//        return startTime;
-//    }
-//
-//    public void setStartTime(LocalDateTime startTime) {
-//        this.startTime = startTime;
-//    }
-//
-//    public LocalDateTime getEndTime() {
-//        return endTime;
-//    }
-//
-//    public void setEndTime(LocalDateTime endTime) {
-//        this.endTime = endTime;
-//    }
 
     public Long getAppCount() {
         return appCount;

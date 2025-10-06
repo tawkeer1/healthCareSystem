@@ -1,13 +1,16 @@
 package com.smartHealthCareAppointmentSystem.HealthCareSystem.controller;
 
 import com.smartHealthCareAppointmentSystem.HealthCareSystem.customexceptions.*;
+import com.smartHealthCareAppointmentSystem.HealthCareSystem.dto.AppointmentRequest;
+import com.smartHealthCareAppointmentSystem.HealthCareSystem.dto.PatientRequest;
+import com.smartHealthCareAppointmentSystem.HealthCareSystem.dto.SpecialityAppRequest;
 import com.smartHealthCareAppointmentSystem.HealthCareSystem.models.*;
 import com.smartHealthCareAppointmentSystem.HealthCareSystem.service.AppointmentService;
 import com.smartHealthCareAppointmentSystem.HealthCareSystem.service.DoctorService;
 import com.smartHealthCareAppointmentSystem.HealthCareSystem.service.PatientService;
+import com.smartHealthCareAppointmentSystem.HealthCareSystem.service.UserContextService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.cglib.core.Local;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
@@ -21,73 +24,68 @@ public class PatientController {
     private final DoctorService doctorService;
     private final PatientService patientService;
     private final AppointmentService appointmentService;
+    private final UserContextService userContextService;
+
     @Autowired
-    public PatientController(DoctorService doctorService, PatientService patientService, AppointmentService appointmentService){
+    public PatientController(DoctorService doctorService, PatientService patientService,
+                             AppointmentService appointmentService, UserContextService userContextService) {
         this.doctorService = doctorService;
         this.patientService = patientService;
         this.appointmentService = appointmentService;
+        this.userContextService = userContextService;
     }
-//    @GetMapping("/")
-//    public String returnSomethig(){
-//        return "Patient";
-//    }
 
     @GetMapping("/searchDoctor")
-    public Doctor searchDoctor(@RequestParam("speciality") String speciality, Authentication auth) throws DoctorNotFoundException {
-        System.out.println(auth.getAuthorities());
+    public Doctor searchDoctor(@RequestParam("speciality") String speciality) throws DoctorNotFoundException {
         return doctorService.searchDoctorBySpeciality(speciality);
     }
 
-//    @PatchMapping("/{id}/updatePersonalDetails")
-//    public Patient updatePersonalDetails(@PathVariable("id") Long id, @RequestBody PatientRequest patient, Authentication authentication) throws PatientNotFoundException, UnauthorizedUserException {
-//        return patientService.updatePersonalDetails(id,patient,authentication);
-//    }
     @PatchMapping("/updatePersonalDetails")
-    public Patient updatePersonalDetails(@RequestBody PatientRequest patient, Authentication authentication) throws UserNotFoundException, PatientNotFoundException, UnauthorizedUserException {
-        return patientService.updatePersonalDetails(patient,authentication);
+    public Patient updatePersonalDetails(@RequestBody PatientRequest updatedPatient, Authentication authentication) throws PatientNotFoundException, InvalidLoginDetailsException {
+        Patient patient = userContextService.getAuthenticatedPatient(authentication);
+        return patientService.updatePersonalDetails(updatedPatient, patient);
     }
 
-//    @PostMapping("/{id}/bookAppointment")
-//    public Appointment bookAppointment(@RequestParam("speciality") String speciality, @PathVariable("id") Long id) throws PatientNotFoundException, DoctorNotFoundException, DoctorBusyException {
-//        List<Doctor> doctors = doctorService.searchDoctorsBySpeciality(speciality);
-//        if(doctors.isEmpty()) throw new DoctorNotFoundException("No doctor with the speciality exists");
-//        // select a random doctor from the list
-//        int size = doctors.size();
-//        Doctor doctor = doctors.get(new Random().nextInt(0,size));
-//        return appointmentService.bookAppointment(doctor, id);
-//    }
-    @PostMapping("/bookAppointment")
-    public Appointment bookAppointment(@RequestParam("speciality") String speciality,
-                                       @RequestParam("startTime") LocalDateTime startTime,
-                                       @RequestParam("endTime") LocalDateTime endTime,
-                                       Authentication authentication) throws UserNotFoundException, PatientNotFoundException, DoctorNotFoundException, DoctorBusyException {
+    @PostMapping("/bookAppWithSpeciality")
+    public Appointment bookAppointment(@Valid @RequestBody SpecialityAppRequest request,
+                                       Authentication authentication) throws
+            DoctorNotFoundException, DoctorBusyException, NotValidTimeException, InvalidLoginDetailsException {
+        String speciality = request.getSpeciality();
+        LocalDateTime startTime = request.getStartTime();
+        LocalDateTime endTime = request.getEndTime();
         List<Doctor> doctors = doctorService.searchDoctorsBySpeciality(speciality);
-        if(doctors.isEmpty()) throw new DoctorNotFoundException("No doctor with the speciality exists");
+        if (doctors.isEmpty()) throw new DoctorNotFoundException("No doctor with the speciality exists");
         // select a random doctor from the list
         int size = doctors.size();
-        Doctor doctor = doctors.get(new Random().nextInt(0,size));
-        return appointmentService.bookAppointment(doctor,startTime,endTime,authentication);
+        Doctor doctor = doctors.get(new Random().nextInt(0, size));
+        Patient patient = userContextService.getAuthenticatedPatient(authentication);
+        return appointmentService.bookAppointment(doctor, patient, startTime, endTime);
     }
-//    @PostMapping("/{id}/cancelAppointment")
-//    public String cancelAppointment(@PathVariable("id") Long patientId,
-//                                    @RequestParam("appointmentId") Long appointmentId) throws AppointmentNotFoundException {
-//        return appointmentService.cancelAppointment(patientId, appointmentId);
-//    }
-//    @PostMapping("/{id}/cancelAppointment")
-//    public String cancelAppointment(@PathVariable("id") Long patientId,
-//                                    @RequestParam("appointmentId") Long appointmentId) throws AppointmentNotFoundException {
-//        return appointmentService.cancelAppointment(patientId, appointmentId);
-//    }
+
+    @PostMapping("/bookAppointment")
+    public Appointment bookAppointmentWithDoctor(@Valid @RequestBody AppointmentRequest appointmentRequest,
+                                                 Authentication authentication) throws
+            DoctorBusyException, NotValidTimeException, InvalidLoginDetailsException, DoctorNotFoundException {
+        Long doctorId = appointmentRequest.getDoctorId();
+        LocalDateTime startTime = appointmentRequest.getStartTime();
+        LocalDateTime endTime = appointmentRequest.getEndTime();
+        Doctor doctor = doctorService.findDoctorById(doctorId);
+        if (doctor == null) throw new DoctorNotFoundException("Doctor does not exist");
+        Patient patient = userContextService.getAuthenticatedPatient(authentication);
+        return appointmentService.bookAppointment(doctor, patient, startTime, endTime);
+    }
+
     @PostMapping("/cancelAppointment")
-    public String cancelAppointment(@RequestParam("appointmentId") Long appointmentId, Authentication authentication) throws UserNotFoundException,PatientNotFoundException, AppointmentNotFoundException {
-        return appointmentService.cancelAppointment(appointmentId, authentication);
+    public String cancelAppointment(@RequestParam("appointmentId") Long appointmentId, Authentication authentication) throws
+            AppointmentNotFoundException, NotValidAppointmentException,
+            NotValidAppointmentActionException, InvalidLoginDetailsException {
+        Patient patient = userContextService.getAuthenticatedPatient(authentication);
+        return appointmentService.cancelAppointment(appointmentId, patient);
     }
-//    @GetMapping("/{id}/prescriptionHistory")
-//    public List<Prescription> getPrescriptionHistory(@PathVariable("id") Long id) throws PatientNotFoundException{
-//        return patientService.getPrescriptionHistory(id);
-//    }
+
     @GetMapping("/prescriptionHistory")
-    public List<Prescription> getPrescriptionHistory(Authentication authentication) throws UserNotFoundException, PatientNotFoundException{
-        return patientService.getPrescriptionHistory(authentication);
+    public List<Prescription> getPrescriptionHistory(Authentication authentication) throws InvalidLoginDetailsException {
+        Patient patient = userContextService.getAuthenticatedPatient(authentication);
+        return patientService.getPrescriptionHistory(patient);
     }
 }

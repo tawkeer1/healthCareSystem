@@ -1,6 +1,7 @@
-package com.smartHealthCareAppointmentSystem.HealthCareSystem.models;
+package com.smartHealthCareAppointmentSystem.HealthCareSystem.dto;
 
 public class PatientRequest {
+
     private String address;
     private String medicalHistory;
     private String familyHistory;
@@ -8,7 +9,9 @@ public class PatientRequest {
     public String getAddress() {
         return address;
     }
+    public PatientRequest(){
 
+    }
     public void setAddress(String address) {
         this.address = address;
     }

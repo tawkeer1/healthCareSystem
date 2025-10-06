@@ -10,6 +10,7 @@ import com.smartHealthCareAppointmentSystem.HealthCareSystem.repositories.UserRe
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
+import org.ehcache.shadow.org.terracotta.offheapstore.disk.storage.AATreeFileAllocator;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Component;
@@ -29,41 +30,35 @@ public class LogAspect {
         this.doctorRepo = doctorRepo;
     }
     @Around("execution(* com.smartHealthCareAppointmentSystem.HealthCareSystem.service.AppointmentService.bookAppointment(..))")
-    public Object logBooking(ProceedingJoinPoint joinPoint) throws Throwable{
+    public Object logBooking(ProceedingJoinPoint joinPoint, Authentication authentication) throws Throwable{
         logger.info("Method: " + joinPoint.toString() + " execution started");
         Object[] args = joinPoint.getArgs();
-        Authentication authentication = (Authentication) args[3];
         String email = authentication.getName();
-        User user = userRepo.findByEmail(email);
-        Patient patient = patientRepo.findByUserId(user.getId());
+        Patient patient = patientRepo.findByEmail(email);
         Doctor doctor = (Doctor) args[0];
-        logger.info("Appointment being booked for " + patient.getUser().getName() + " with doctor " + doctor.getUser().getName());
+        logger.info("Appointment being booked for " + patient.getName() + " with doctor " + doctor.getName());
         Object result = joinPoint.proceed();
         logger.info("Appointment booked succesfully");
         logger.info("Method: " + joinPoint.toString() + " execution ended");
         return result;
     }
     @Around("execution(* com.smartHealthCareAppointmentSystem.HealthCareSystem.service.AppointmentService.cancelAppointment(..))")
-    public Object logCancelling(ProceedingJoinPoint joinPoint) throws Throwable {
+    public Object logCancelling(ProceedingJoinPoint joinPoint, Authentication authentication) throws Throwable {
         logger.info("Method: " + joinPoint.toString() + " execution started");
         Object[] args = joinPoint.getArgs();
-        Authentication authentication = (Authentication) args[1];
-        User user = userRepo.findByEmail(authentication.getName());
-        Patient patient = patientRepo.findByUserId(user.getId());
-        logger.info("Appointment " + args[0] + " being cancelled for patient " + patient.getUser().getName());
+        Patient patient = patientRepo.findByEmail(authentication.getName());
+        logger.info("Appointment " + args[0] + " being cancelled for patient " + patient.getName());
         Object result = joinPoint.proceed();
         logger.info("Appointment successfully cancelled");
         logger.info("Method: " + joinPoint.toString() + " execution ended");
         return result;
     }
     @Around("execution(* com.smartHealthCareAppointmentSystem.HealthCareSystem.service.PrescriptionService.addPrescription(..))")
-    public Object logPrescription(ProceedingJoinPoint joinPoint) throws Throwable{
+    public Object logPrescription(ProceedingJoinPoint joinPoint, Authentication authentication) throws Throwable{
         logger.info("Method " + joinPoint.toString() + " execution started");
         Object[] args = joinPoint.getArgs();
-        Authentication authentication = (Authentication) args[3];
-        User user = userRepo.findByEmail(authentication.getName());
-        Doctor doctor = doctorRepo.findDoctorByUserId(user.getId());
-        logger.info("Prescription being added by doctor: " + doctor.getUser().getName() + " to appointment " + args[1]);
+        Doctor doctor = doctorRepo.findByEmail(authentication.getName());
+        logger.info("Prescription being added by doctor: " + doctor.getName() + " to appointment " + args[1]);
         Object result = joinPoint.proceed();
         logger.info("Prescription added successfully");
         logger.info("Method: " + joinPoint.toString() + " execution ended");

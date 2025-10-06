@@ -6,6 +6,7 @@ import jakarta.validation.constraints.NotNull;
 import java.time.LocalDateTime;
 
 @Entity
+@Table(name = "appointment")
 public class Appointment {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -13,12 +14,17 @@ public class Appointment {
 
     @ManyToOne
     @JoinColumn(name = "patient_id", referencedColumnName = "id", nullable = false)
+    @NotNull
     private Patient patient;
     @ManyToOne
     @JoinColumn(name = "doctor_id", referencedColumnName = "id", nullable = false)
+    @NotNull
     private Doctor doctor;
+    @NotNull
     private LocalDateTime time;
+    @NotNull
     private LocalDateTime startTime;
+    @NotNull
     private LocalDateTime endTime;
     @NotNull
     @Enumerated(EnumType.STRING)
